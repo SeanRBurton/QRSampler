@@ -1,7 +1,9 @@
+from collections.abc import Mapping, Iterable
+import math
 import numpy as np
 
 from sklearn.utils import check_random_state
-from skllearn.model_selection import ParameterGrid
+from sklearn.model_selection import ParameterGrid
 
 def _phi_d(d):
     """Generate the seed of the d-dimensional low-discrepance R-sequence.
@@ -73,9 +75,9 @@ class QuasiRandomParameterSampler:
         self.n_iter = n_iter
         self.random_state = random_state
         self.param_distributions = param_distributions
-        self._dim = len(self.param_distributions) + max(len(d) for d in self.param_distributions)
-        phi = _phi_d(self.dim)
-        self._alpha = phi ** (-np.arange(1, len(dists) + 1))
+        n_dim = len(self.param_distributions) + max(len(d) for d in self.param_distributions)
+        phi = _phi_d(n_dim)
+        self._alpha = phi ** (-np.arange(1, n_dim + 1))
 
     def _is_all_lists(self):
         return all(
@@ -87,9 +89,9 @@ class QuasiRandomParameterSampler:
         rng = check_random_state(self.random_state)
         if self.random_state == 0:
             #The median is a reasonable starting point.
-            quantiles = np.full(self._dim, 0.5)
+            quantiles = np.full(self._alpha.shape, 0.5)
         else:
-            quantiles = rng.random(self._dim)
+            quantiles = rng.random(self._alpha.shape)
         for _ in range(self.n_iter):
             dist = rng.choice(self.param_distributions)
             # Always sort the keys of a dictionary, for reproducibility
